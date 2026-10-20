@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>MVPM</title>
+<style>
+  body { margin: 0; overflow: hidden; background: #87CEEB; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  // Ground
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(2000, 2000),
+    new THREE.MeshStandardMaterial({ color: 0x3a9d3a })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  scene.add(ground);
+
+  // Light
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(50, 100, 50);
+  scene.add(light);
+  scene.add(new THREE.AmbientLight(0x888888));
+
+  // Car (simple box for now)
+  const car = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 1, 4),
+    new THREE.MeshStandardMaterial({ color: 0x2255ff })
+  );
+  car.position.y = 0.5;
+  scene.add(car);
+
+  let speed = 0;
+  let angle = 0;
+  const keys = {};
+  document.addEventListener('keydown', e => keys[e.key] = true);
+  document.addEventListener('keyup', e => keys[e.key] = false);
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    if (keys['ArrowUp']) speed = Math.min(speed + 0.01, 0.5);
+    else if (keys['ArrowDown']) speed = Math.max(speed - 0.01, -0.3);
+    else speed *= 0.95;
+
+    if (keys['ArrowLeft']) angle += 0.03 * (speed !== 0 ? 1 : 0);
+    if (keys['ArrowRight']) angle -= 0.03 * (speed !== 0 ? 1 : 0);
+
+    car.rotation.y = angle;
+    car.position.x += Math.sin(angle) * speed;
+    car.position.z += Math.cos(angle) * speed;
+
+    camera.position.x = car.position.x - Math.sin(angle) * 10;
+    camera.position.z = car.position.z - Math.cos(angle) * 10;
+    camera.position.y = car.position.y + 5;
+    camera.lookAt(car.position);
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+</script>
+</body>
+</html>
